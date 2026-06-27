@@ -1,11 +1,13 @@
 package main
 
 import (
-	"bufio"
+	"bufio" // leitura otimizada de dados (em buffers/linhas)
 	"fmt" // exibição de textos
-	"io"
+	"io" // funções básicas de entrada e saída de dados
+	
 	"net/http" // requisições e servidores web
 	"os"       // interação com o sistema operacional
+	"strconv" // conversão de strings para outros tipos
 	"strings"
 	"time" // manipulação de datas e horários
 )
@@ -16,8 +18,7 @@ const delay = 5
 func main() {
 
 	exibeIntroducao()
-	registraLog("teste.com.br", false)
-
+	
 	for {
 		exibeMenu()
 		comando := leComando()
@@ -27,6 +28,7 @@ func main() {
 			iniciarMonitoramento()
 		case 2:
 			fmt.Println("Exibindo Logs...")
+			imprimeLogs()
 		case 0:
 			fmt.Println("Saindo do programa")	
 			os.Exit(0) // Saiu com sucesso
@@ -61,7 +63,6 @@ func exibeMenu() {
 
 func iniciarMonitoramento() {
 	fmt.Println("Monitorando...")
-	// sites := []string{"https://www.skoob.com.br/pt", "https://www.martinsfontespaulista.com.br/", "https://br.pinterest.com/", "https://studioghibli.com.br/studioghibli/"}
 	
 	sites := leSitesDoArquivo()
 
@@ -94,7 +95,6 @@ func testaSite(site string) {
 }
 
 func leSitesDoArquivo() []string {
-
 	var sites[]string // slice vazio
 
 	arquivo, err := os.Open("sites.txt")
@@ -121,13 +121,22 @@ func leSitesDoArquivo() []string {
 }
 
 func registraLog(site string, status bool) {
-
-	arquivo, err := os.OpenFile("log.txt", os.O_RDWR | os.O_CREATE, 0666)
+	arquivo, err := os.OpenFile("log.txt", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666) // escrever OU criar caso não exista OU adicione sem subscrever
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println(arquivo)
+	arquivo.WriteString(time.Now().Format("02/01/2006 15:04:05") + " - " + site + " - online: " + strconv.FormatBool(status) + "\n") // converter para string o status 
 	arquivo.Close()
+}
+
+func imprimeLogs() {
+	arquivo, err := os.ReadFile("log.txt")
+
+	if err != nil {
+		fmt.Println("Erro detectado:", err)
+	}
+
+	fmt.Println(string(arquivo)) // converter para uma string legivel 
 }
